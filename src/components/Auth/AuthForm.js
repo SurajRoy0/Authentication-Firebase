@@ -1,5 +1,5 @@
 import { useState, useRef, useContext } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 import classes from './AuthForm.module.css';
 import AuthContext from '../../Store/auth-context';
 
@@ -8,7 +8,8 @@ const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const emailInputRef = useRef('');
   const passwordInputRef = useRef('');
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -16,10 +17,11 @@ const AuthForm = () => {
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
     let url = '';
+
     if (isLogin) {
-      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDNSdsS0Bmv6O1ra0fIgEbY4REGDZg9FY4'
+      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDNSdsS0Bmv6O1ra0fIgEbY4REGDZg9FY4';
     } else {
-      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDNSdsS0Bmv6O1ra0fIgEbY4REGDZg9FY4'
+      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDNSdsS0Bmv6O1ra0fIgEbY4REGDZg9FY4';
     }
 
     fetch(url, {
@@ -27,24 +29,29 @@ const AuthForm = () => {
       body: JSON.stringify({
         email: enteredEmail,
         password: enteredPassword,
-        returnSecureToken: true
+        returnSecureToken: true,
       }),
       headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(res => {
-      setIsLoading(false);
-      if (res.ok) {
-        return res.json();
-      } else {
-        throw new Error("Authentication Faild")
-      }
-    }).then(data => {
-      authCtx.login(data.idToken)
-    }).catch(err => {
-      alert(err.message)
+        'Content-Type': 'application/json',
+      },
     })
-  }
+      .then((res) => {
+        setIsLoading(false);
+        if (res.ok) {
+          return res.json();
+        } else {
+          throw new Error('Authentication Failed');
+        }
+      })
+      .then((data) => {
+        authCtx.login(data.idToken);
+        navigate('/profile');
+      })
+      .catch((err) => {
+        alert(err.message);
+        console.log(err.message);
+      });
+  };
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -68,7 +75,9 @@ const AuthForm = () => {
           />
         </div>
         <div className={classes.actions}>
-          {!isLoading && <button>{isLogin ? 'Log In' : 'Create Account'}</button>}
+          {!isLoading && (
+            <button>{isLogin ? 'Log In' : 'Create Account'}</button>
+          )}
           {isLoading && <p>Loading...</p>}
           <button
             type='button'
